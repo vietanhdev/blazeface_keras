@@ -1,4 +1,7 @@
 ## SSD: Single-Shot MultiBox Detector implementation in Keras
+
+This repository is a fork from <https://github.com/pierluigiferrari/ssd_keras>.
+
 ---
 ### Contents
 
