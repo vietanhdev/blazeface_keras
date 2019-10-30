@@ -14,6 +14,8 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+NOTICE: This file is a modified version by Viet Anh Nguyen (vietanh@vietanhdev.com)
 '''
 
 from __future__ import division
@@ -44,7 +46,7 @@ class L2Normalization(Layer):
     '''
 
     def __init__(self, gamma_init=20, **kwargs):
-        if K.image_dim_ordering() == 'tf':
+        if K.common.image_data_format() == 'channels_last':
             self.axis = 3
         else:
             self.axis = 1

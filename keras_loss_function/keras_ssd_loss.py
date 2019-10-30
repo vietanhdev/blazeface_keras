@@ -14,6 +14,8 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+NOTICE: This file is a modified version by Viet Anh Nguyen (vietanh@vietanhdev.com)
 '''
 
 from __future__ import division
@@ -92,7 +94,7 @@ class SSDLoss:
         # Make sure that `y_pred` doesn't contain any zeros (which would break the log function)
         y_pred = tf.maximum(y_pred, 1e-15)
         # Compute the log loss
-        log_loss = -tf.reduce_sum(y_true * tf.log(y_pred), axis=-1)
+        log_loss = -tf.reduce_sum(y_true * tf.math.log(y_pred), axis=-1)
         return log_loss
 
     def compute_loss(self, y_true, y_pred):
@@ -130,14 +132,14 @@ class SSDLoss:
 
         # 1: Compute the losses for class and box predictions for every box.
 
-        classification_loss = tf.to_float(self.log_loss(y_true[:,:,:-12], y_pred[:,:,:-12])) # Output shape: (batch_size, n_boxes)
-        localization_loss = tf.to_float(self.smooth_L1_loss(y_true[:,:,-12:-8], y_pred[:,:,-12:-8])) # Output shape: (batch_size, n_boxes)
+        classification_loss = tf.cast(self.log_loss(y_true[:,:,:-12], y_pred[:,:,:-12]), tf.float32) # Output shape: (batch_size, n_boxes)
+        localization_loss = tf.cast(self.smooth_L1_loss(y_true[:,:,-12:-8], y_pred[:,:,-12:-8]), tf.float32) # Output shape: (batch_size, n_boxes)
 
         # 2: Compute the classification losses for the positive and negative targets.
 
         # Create masks for the positive and negative ground truth classes.
         negatives = y_true[:,:,0] # Tensor of shape (batch_size, n_boxes)
-        positives = tf.to_float(tf.reduce_max(y_true[:,:,1:-12], axis=-1)) # Tensor of shape (batch_size, n_boxes)
+        positives = tf.cast(tf.reduce_max(y_true[:,:,1:-12], axis=-1), tf.float32) # Tensor of shape (batch_size, n_boxes)
 
         # Count the number of positive boxes (classes 1 to n) in y_true across the whole batch.
         n_positive = tf.reduce_sum(positives)
@@ -163,7 +165,7 @@ class SSDLoss:
 
         # Compute the number of negative examples we want to account for in the loss.
         # We'll keep at most `self.neg_pos_ratio` times the number of positives in `y_true`, but at least `self.n_neg_min` (unless `n_neg_loses` is smaller).
-        n_negative_keep = tf.minimum(tf.maximum(self.neg_pos_ratio * tf.to_int32(n_positive), self.n_neg_min), n_neg_losses)
+        n_negative_keep = tf.minimum(tf.maximum(self.neg_pos_ratio * tf.cast(n_positive, tf.int32), self.n_neg_min), n_neg_losses)
 
         # In the unlikely case when either (1) there are no negative ground truth boxes at all
         # or (2) the classification loss for all negative boxes is zero, return zero as the `neg_class_loss`.
@@ -185,7 +187,7 @@ class SSDLoss:
             negatives_keep = tf.scatter_nd(indices=tf.expand_dims(indices, axis=1),
                                            updates=tf.ones_like(indices, dtype=tf.int32),
                                            shape=tf.shape(neg_class_loss_all_1D)) # Tensor of shape (batch_size * n_boxes,)
-            negatives_keep = tf.to_float(tf.reshape(negatives_keep, [batch_size, n_boxes])) # Tensor of shape (batch_size, n_boxes)
+            negatives_keep = tf.cast(tf.reshape(negatives_keep, [batch_size, n_boxes]), tf.float32) # Tensor of shape (batch_size, n_boxes)
             # ...and use it to keep only those boxes and mask all other classification losses
             neg_class_loss = tf.reduce_sum(classification_loss * negatives_keep, axis=-1) # Tensor of shape (batch_size,)
             return neg_class_loss
@@ -206,6 +208,6 @@ class SSDLoss:
         # because the relevant criterion to average our loss over is the number of positive boxes in the batch
         # (by which we're dividing in the line above), not the batch size. So in order to revert Keras' averaging
         # over the batch size, we'll have to multiply by it.
-        total_loss = total_loss * tf.to_float(batch_size)
+        total_loss = total_loss * tf.cast(batch_size, tf.float32)
 
         return total_loss
