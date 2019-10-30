@@ -96,3 +96,10 @@ ENV/
 
 # Ignore any files and directories that begin with the word "local"
 local*
+
+# Ignore data folder
+/data/*
+!/data/.gitkeep
+
+# h5 files
+/*.h5
