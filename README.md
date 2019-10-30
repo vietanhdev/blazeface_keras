@@ -145,16 +145,14 @@ Here are some prediction examples of an SSD7 (i.e. the small 7-layer version) pa
 
 ### Dependencies
 
-* Python 3.x
+* Python 3.7
 * Numpy
-* TensorFlow 1.x
+* TensorFlow 2.0.0
 * Keras 2.x
 * OpenCV
 * Beautiful Soup 4.x
 
-The Theano and CNTK backends are currently not supported.
-
-Python 2 compatibility: This implementation seems to work with Python 2.7, but I don't provide any support for it. It's 2018 and nobody should be using Python 2 anymore.
+The environment can be setup with `environment.yml` - using Anaconda.
 
 ### How to use it
 

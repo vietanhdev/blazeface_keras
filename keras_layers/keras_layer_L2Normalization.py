@@ -20,9 +20,9 @@ NOTICE: This file is a modified version by Viet Anh Nguyen (vietanh@vietanhdev.c
 
 from __future__ import division
 import numpy as np
+import tensorflow as tf
 import keras.backend as K
-from keras.engine.topology import InputSpec
-from keras.engine.topology import Layer
+from keras.layers import Layer, InputSpec
 
 class L2Normalization(Layer):
     '''
@@ -46,7 +46,7 @@ class L2Normalization(Layer):
     '''
 
     def __init__(self, gamma_init=20, **kwargs):
-        if K.common.image_data_format() == 'channels_last':
+        if K.image_data_format() == 'channels_last':
             self.axis = 3
         else:
             self.axis = 1
