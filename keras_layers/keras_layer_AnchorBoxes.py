@@ -20,8 +20,8 @@ NOTICE: This file is a modified version by Viet Anh Nguyen (vietanh@vietanhdev.c
 
 from __future__ import division
 import numpy as np
-import tensorflow.keras.backend as K
-from tensorflow.keras.layers import Layer, InputSpec
+import keras.backend as K
+from keras.layers import Layer, InputSpec
 
 from bounding_box_utils.bounding_box_utils import convert_coordinates
 
@@ -170,9 +170,9 @@ class AnchorBoxes(Layer):
 
         # We need the shape of the input tensor
         if K.image_data_format() == 'channels_last':
-            batch_size, feature_map_height, feature_map_width, feature_map_channels = x._keras_shape
+            batch_size, feature_map_height, feature_map_width, feature_map_channels = x.shape
         else: # Not yet relevant since TensorFlow is the only supported backend right now, but it can't harm to have this in here for the future
-            batch_size, feature_map_channels, feature_map_height, feature_map_width = x._keras_shape
+            batch_size, feature_map_channels, feature_map_height, feature_map_width = x.shape
 
         # Compute the grid of box center points. They are identical for all aspect ratios.
 

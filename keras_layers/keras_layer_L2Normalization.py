@@ -21,8 +21,8 @@ NOTICE: This file is a modified version by Viet Anh Nguyen (vietanh@vietanhdev.c
 from __future__ import division
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras.backend as K
-from tensorflow.keras.layers import Layer, InputSpec
+import keras.backend as K
+from keras.layers import Layer, InputSpec
 
 class L2Normalization(Layer):
     '''
@@ -57,7 +57,7 @@ class L2Normalization(Layer):
         self.input_spec = [InputSpec(shape=input_shape)]
         gamma = self.gamma_init * np.ones((input_shape[self.axis],))
         self.gamma = K.variable(gamma, name='{}_gamma'.format(self.name))
-        # self.trainable_weights = [self.gamma]
+        self._trainable_weights = [self.gamma]
         super(L2Normalization, self).build(input_shape)
 
     def call(self, x, mask=None):
