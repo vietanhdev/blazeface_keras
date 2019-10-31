@@ -20,8 +20,8 @@ NOTICE: This file is a modified version by Viet Anh Nguyen (vietanh@vietanhdev.c
 
 from __future__ import division
 import numpy as np
-import keras.backend as K
-from keras.layers import Layer, InputSpec
+import tensorflow.keras.backend as K
+from tensorflow.keras.layers import Layer, InputSpec
 
 from bounding_box_utils.bounding_box_utils import convert_coordinates
 

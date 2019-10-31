@@ -20,10 +20,10 @@ NOTICE: This file is a modified version by Viet Anh Nguyen (vietanh@vietanhdev.c
 
 from __future__ import division
 import numpy as np
-from keras.models import Model
-from keras.layers import Input, Lambda, Activation, Conv2D, MaxPooling2D, ZeroPadding2D, Reshape, Concatenate
-from keras.regularizers import l2
-import keras.backend as K
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Lambda, Activation, Conv2D, MaxPooling2D, ZeroPadding2D, Reshape, Concatenate
+from tensorflow.keras.regularizers import l2
+import tensorflow.keras.backend as K
 
 from keras_layers.keras_layer_AnchorBoxes import AnchorBoxes
 from keras_layers.keras_layer_L2Normalization import L2Normalization
