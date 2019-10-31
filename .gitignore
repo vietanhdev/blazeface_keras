@@ -103,3 +103,5 @@ local*
 
 # h5 files
 /*.h5
+
+.vscode
