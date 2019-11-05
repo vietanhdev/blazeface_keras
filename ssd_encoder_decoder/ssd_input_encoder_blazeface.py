@@ -67,16 +67,12 @@ class SSDInputEncoder:
                 to detect. Must be >0.
             max_scale (float, optional): The largest scaling factor for the size of the anchor boxes as a fraction
                 of the shorter side of the input images. All scaling factors between the smallest and the
-                largest will be linearly interpolated. Note that the second to last of the linearly interpolated
-                scaling factors will actually be the scaling factor for the last predictor layer, while the last
-                scaling factor is used for the second box for aspect ratio 1 in the last predictor layer
-                if `two_boxes_for_ar1` is `True`. Note that you should set the scaling factors
+                largest will be linearly interpolated. Note that you should set the scaling factors
                 such that the resulting anchor box sizes correspond to the sizes of the objects you are trying
                 to detect. Must be greater than or equal to `min_scale`.
             scales (list, optional): A list of floats >0 containing scaling factors per convolutional predictor layer.
-                This list must be one element longer than the number of predictor layers. The first `k` elements are the
-                scaling factors for the `k` predictor layers, while the last element is used for the second box
-                for aspect ratio 1 in the last predictor layer if `two_boxes_for_ar1` is `True`. This additional
+                This list must have length equal to the number of predictor layers. The first `k` elements are the
+                scaling factors for the `k` predictor layers. This additional
                 last scaling factor must be passed either way, even if it is not being used. If a list is passed,
                 this argument overrides `min_scale` and `max_scale`. All scaling factors must be greater than zero.
                 Note that you should set the scaling factors such that the resulting anchor box sizes correspond to
@@ -87,10 +83,6 @@ class SSDInputEncoder:
             aspect_ratios_per_layer (list, optional): A list containing one aspect ratio list for each prediction layer.
                 If a list is passed, it overrides `aspect_ratios_global`. Note that you should set the aspect ratios such
                 that the resulting anchor box shapes very roughly correspond to the shapes of the objects you are trying to detect.
-            two_boxes_for_ar1 (bool, optional): Only relevant for aspect ratios lists that contain 1. Will be ignored otherwise.
-                If `True`, two anchor boxes will be generated for aspect ratio 1. The first will be generated
-                using the scaling factor for the respective layer, the second one will be generated using
-                geometric mean of said scaling factor and next bigger scaling factor.
             steps (list, optional): `None` or a list with as many elements as there are predictor layers. The elements can be
                 either ints/floats or tuples of two ints/floats. These numbers represent for each predictor layer how many
                 pixels apart the anchor box center points should be vertically and horizontally along the spatial grid over
@@ -142,11 +134,9 @@ class SSDInputEncoder:
             raise ValueError("Either `min_scale` and `max_scale` or `scales` need to be specified.")
 
         if scales:
-            if (len(scales) != predictor_sizes.shape[0] + 1): # Must be two nested `if` statements since `list` and `bool` cannot be combined by `&`
-                raise ValueError("It must be either scales is None or len(scales) == len(predictor_sizes)+1, but len(scales) == {} and len(predictor_sizes)+1 == {}".format(len(scales), len(predictor_sizes)+1))
+            if (len(scales) != predictor_sizes.shape[0]): # Must be two nested `if` statements since `list` and `bool` cannot be combined by `&`
+                raise ValueError("It must be either scales is None or len(scales) == len(predictor_sizes), but len(scales) == {} and len(predictor_sizes) == {}".format(len(scales), len(predictor_sizes)))
             scales = np.array(scales)
-            if np.any(scales <= 0):
-                raise ValueError("All values in `scales` must be greater than 0, but the passed list of scales is {}".format(scales))
         else: # If no list of scales was passed, we need to make sure that `min_scale` and `max_scale` are valid values.
             if not 0 < min_scale <= max_scale:
                 raise ValueError("It must be 0 < min_scale <= max_scale, but it is min_scale = {} and max_scale = {}".format(min_scale, max_scale))
@@ -204,7 +194,6 @@ class SSDInputEncoder:
         else:
             # If aspect ratios are given per layer, we'll use those.
             self.aspect_ratios = aspect_ratios_per_layer
-        self.two_boxes_for_ar1 = two_boxes_for_ar1
         if not (steps is None):
             self.steps = steps
         else:
@@ -230,15 +219,9 @@ class SSDInputEncoder:
         if not (aspect_ratios_per_layer is None):
             self.n_boxes = []
             for aspect_ratios in aspect_ratios_per_layer:
-                if (1 in aspect_ratios) & two_boxes_for_ar1:
-                    self.n_boxes.append(len(aspect_ratios) + 1)
-                else:
-                    self.n_boxes.append(len(aspect_ratios))
+                self.n_boxes.append(len(aspect_ratios))
         else:
-            if (1 in aspect_ratios_global) & two_boxes_for_ar1:
-                self.n_boxes = len(aspect_ratios_global) + 1
-            else:
-                self.n_boxes = len(aspect_ratios_global)
+            self.n_boxes = len(aspect_ratios_global)
 
         ##################################################################################
         # Compute the anchor boxes for each predictor layer.
@@ -262,8 +245,7 @@ class SSDInputEncoder:
         for i in range(len(self.predictor_sizes)):
             boxes, center, wh, step, offset = self.generate_anchor_boxes_for_layer(feature_map_size=self.predictor_sizes[i],
                                                                                    aspect_ratios=self.aspect_ratios[i],
-                                                                                   this_scale=self.scales[i],
-                                                                                   next_scale=self.scales[i+1],
+                                                                                   scales=self.scales[i],
                                                                                    this_steps=self.steps[i],
                                                                                    this_offsets=self.offsets[i],
                                                                                    diagnostics=True)
@@ -419,8 +401,7 @@ class SSDInputEncoder:
     def generate_anchor_boxes_for_layer(self,
                                         feature_map_size,
                                         aspect_ratios,
-                                        this_scale,
-                                        next_scale,
+                                        scales,
                                         this_steps=None,
                                         this_offsets=None,
                                         diagnostics=False):
@@ -433,10 +414,8 @@ class SSDInputEncoder:
                 dimensions of the feature map for which to generate the anchor boxes.
             aspect_ratios (list): A list of floats, the aspect ratios for which anchor boxes are to be generated.
                 All list elements must be unique.
-            this_scale (float): A float in [0, 1], the scaling factor for the size of the generate anchor boxes
+            scales (float): A float in [0, 1], the scaling factor for the size of the generate anchor boxes
                 as a fraction of the shorter side of the input image.
-            next_scale (float): A float in [0, 1], the next larger scaling factor. Only relevant if
-                `self.two_boxes_for_ar1 == True`.
             diagnostics (bool, optional): If true, the following additional outputs will be returned:
                 1) A list of the center point `x` and `y` coordinates for each spatial location.
                 2) A list containing `(width, height)` for each box aspect ratio.
@@ -458,18 +437,11 @@ class SSDInputEncoder:
         size = min(self.img_height, self.img_width)
         # Compute the box widths and and heights for all aspect ratios
         wh_list = []
-        for ar in aspect_ratios:
-            if (ar == 1):
-                # Compute the regular anchor box for aspect ratio 1.
-                box_height = box_width = this_scale * size
-                wh_list.append((box_width, box_height))
-                if self.two_boxes_for_ar1:
-                    # Compute one slightly larger version using the geometric mean of this scale value and the next.
-                    box_height = box_width = np.sqrt(this_scale * next_scale) * size
-                    wh_list.append((box_width, box_height))
-            else:
-                box_width = this_scale * size * np.sqrt(ar)
-                box_height = this_scale * size / np.sqrt(ar)
+
+        for scale in scales:
+            for ar in aspect_ratios:
+                box_width = scale * size * np.sqrt(ar)
+                box_height = scale * size / np.sqrt(ar)
                 wh_list.append((box_width, box_height))
         wh_list = np.array(wh_list)
         n_boxes = len(wh_list)
