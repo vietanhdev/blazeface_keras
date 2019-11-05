@@ -278,22 +278,14 @@ def blazeface(image_size,
     if swap_channels:
         x1 = Lambda(input_channel_swap, output_shape=(img_height, img_width, img_channels), name='input_channel_swap')(x1)
 
+    # Use BlazeFace to extract features
     # [(None, 16, 16, 96), (None, 8, 8, 96)]
     blaze_face = BlazeFace((img_height, img_width, img_channels))(x1)
 
-
-    # The next part is to add the convolutional predictor layers on top of the base network
-    # that we defined above. Note that I use the term "base network" differently than the paper does.
-    # To me, the base network is everything that is not convolutional predictor layers or anchor
-    # box layers. In this case we'll have four predictor layers, but of course you could
-    # easily rewrite this into an arbitrarily deep base network and add an arbitrary number of
-    # predictor layers on top of the base network by simply following the pattern shown here.
-
-    # Build the convolutional predictor layers on top of conv layers 4, 5
+    # Build the convolutional predictor layers on top of conv layers 16x16 and 8x8 (return values from above BlazeFace CNN layers)
     # We build two predictor layers on top of each of these layers: One for class prediction (classification), one for box coordinate prediction (localization)
     # We precidt `n_classes` confidence values for each box, hence the `classes` predictors have depth `n_boxes * n_classes`
     # We predict 4 box coordinates for each box, hence the `boxes` predictors have depth `n_boxes * 4`
-
 
     # Output shape of `classes`: `(batch, height, width, n_boxes * n_classes)`
     classes16x16 = Conv2D(n_boxes[0] * n_classes, (3, 3), strides=(1, 1), padding="same", kernel_initializer='he_normal', kernel_regularizer=l2(l2_reg), name='classes16x16')(blaze_face[0])
