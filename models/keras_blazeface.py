@@ -307,8 +307,8 @@ def blazeface(image_size,
 
     # Reshape the class predictions, yielding 3D tensors of shape `(batch, height * width * n_boxes, n_classes)`
     # We want the classes isolated in the last axis to perform softmax on them
-    classes16x16_reshaped = Reshape((-1, n_classes), name='classes16x16_reshape')(boxes16x16)
-    classes8x8_reshaped = Reshape((-1, n_classes), name='classes8x8_reshape')(boxes8x8)
+    classes16x16_reshaped = Reshape((-1, n_classes), name='classes16x16_reshape')(classes16x16)
+    classes8x8_reshaped = Reshape((-1, n_classes), name='classes8x8_reshape')(classes8x8)
 
     # Reshape the box coordinate predictions, yielding 3D tensors of shape `(batch, height * width * n_boxes, 4)`
     # We want the four box coordinates isolated in the last axis to compute the smooth L1 loss
