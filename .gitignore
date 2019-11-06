@@ -105,3 +105,6 @@ local*
 /*.h5
 
 .vscode
+
+# Training logs
+*_training_log.csv
