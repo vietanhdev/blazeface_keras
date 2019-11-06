@@ -29,6 +29,7 @@ The repository currently provides the following network architectures:
 * SSD300: [`keras_ssd300.py`](models/keras_ssd300.py)
 * SSD512: [`keras_ssd512.py`](models/keras_ssd512.py)
 * SSD7: [`keras_ssd7.py`](models/keras_ssd7.py) - a smaller 7-layer version that can be trained from scratch relatively quickly even on a mid-tier GPU, yet is capable enough for less complex object detection tasks and testing. You're obviously not going to get state-of-the-art results with that one, but it's fast.
+* BlazeFace: [`keras_blazeface.py`](models/keras_blazeface.py) - BlazeFace model.
 
 If you would like to use one of the provided trained models for transfer learning (i.e. fine-tune one of the trained models on your own dataset), there is a [Jupyter notebook tutorial](weight_sampling_tutorial.ipynb) that helps you sub-sample the trained weights so that they are compatible with your dataset, see further below.
 
